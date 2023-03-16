@@ -1,6 +1,6 @@
 FROM registry.access.redhat.com/ubi8/ubi:8.7-1090
 
-ENV HOME=/var/lib/rabbitmq \
+ENV RABBITMQ_DATA_DIR=/var/lib/rabbitmq \
     RABBITMQ_HOME=/opt/rabbitmq \
     RABBITMQ_LOGS=- \
     RABBITMQ_SASL_LOGS=- \
@@ -23,11 +23,13 @@ ENV PATH=$RABBITMQ_HOME/sbin:$PATH
 
 RUN groupadd --gid 999 --system rabbitmq; \
 	useradd --uid 999 --system --home-dir "$HOME" --gid rabbitmq rabbitmq; \
-    mkdir -p "$HOME" /etc/rabbitmq /etc/rabbitmq/conf.d /tmp/rabbitmq-ssl /var/log/rabbitmq; \
-	chown -fR rabbitmq:rabbitmq "$HOME" /etc/rabbitmq /etc/rabbitmq/conf.d /tmp/rabbitmq-ssl /var/log/rabbitmq; \
-	chmod 777 "$HOME" /etc/rabbitmq /etc/rabbitmq/conf.d /tmp/rabbitmq-ssl /var/log/rabbitmq
+    mkdir -p "$HOME" /etc/rabbitmq /etc/rabbitmq/conf.d /tmp/rabbitmq-ssl /var/log/rabbitmq /var/lib/rabbitmq; \
+	chown -fR rabbitmq:rabbitmq "$HOME" /etc/rabbitmq /etc/rabbitmq/conf.d /tmp/rabbitmq-ssl /var/log/rabbitmq /var/lib/rabbitmq; \
+	chmod 777 "$HOME" /etc/rabbitmq /etc/rabbitmq/conf.d /tmp/rabbitmq-ssl /var/log/rabbitmq /var/lib/rabbitmq
 
 RUN rabbitmq-plugins enable rabbitmq_management
+
+VOLUME $RABBITMQ_DATA_DIR
 
 USER rabbitmq
 
