@@ -1,6 +1,6 @@
-FROM registry.access.redhat.com/ubi8/ubi:8.7-1090
+FROM registry.access.redhat.com/ubi8/ubi:8.7-1112
 
-ENV RABBITMQ_DATA_DIR=/var/lib/rabbitmq \
+ENV HOME=/var/lib/rabbitmq \
     RABBITMQ_HOME=/opt/rabbitmq \
     RABBITMQ_LOGS=- \
     RABBITMQ_SASL_LOGS=- \
@@ -19,19 +19,17 @@ RUN yum update -y \
     && yum install socat logrotate -y \
     && yum install --repo rabbitmq_erlang --repo rabbitmq_server erlang rabbitmq-server -y
 
-ENV PATH=$RABBITMQ_HOME/sbin:$PATH
-
-RUN groupadd --gid 999 --system rabbitmq; \
-	useradd --uid 999 --system --home-dir "$HOME" --gid rabbitmq rabbitmq; \
-    mkdir -p "$HOME" /etc/rabbitmq /etc/rabbitmq/conf.d /tmp/rabbitmq-ssl /var/log/rabbitmq /var/lib/rabbitmq; \
-	chown -fR rabbitmq:rabbitmq "$HOME" /etc/rabbitmq /etc/rabbitmq/conf.d /tmp/rabbitmq-ssl /var/log/rabbitmq /var/lib/rabbitmq; \
-	chmod 777 "$HOME" /etc/rabbitmq /etc/rabbitmq/conf.d /tmp/rabbitmq-ssl /var/log/rabbitmq /var/lib/rabbitmq
-
 RUN rabbitmq-plugins enable rabbitmq_management
 
-VOLUME $RABBITMQ_DATA_DIR
+RUN usermod -g root rabbitmq
+RUN mkdir -p $HOME /etc/rabbitmq /var/log/rabbitmq \
+    && chown -R rabbitmq:0 $HOME /etc/rabbitmq /var/log/rabbitmq \
+    && chmod -R g=u /etc/rabbitmq /var/log/rabbitmq
+
+VOLUME $HOME
 
 USER rabbitmq
+ENV PATH=$RABBITMQ_HOME/sbin:$PATH
 
 EXPOSE 5672 25672 15672
 CMD ["rabbitmq-server"]
